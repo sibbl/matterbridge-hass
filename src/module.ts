@@ -125,7 +125,7 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
   /** Regex to match air quality sensors. It matches all domain sensor (sensor\.) with names ending in _air_quality */
   airQualityRegex: RegExp | undefined;
 
-  readonly individualEntitiesDomains = ['automation', 'scene', 'script', 'input_boolean', 'input_button'];
+  readonly individualEntitiesDomains = ['automation', 'scene', 'script', 'input_boolean', 'input_button', 'button'];
   readonly supportedCoreDomains = ['switch', 'light', 'lock', 'fan', 'cover', 'climate', 'valve', 'vacuum'];
 
   /**
@@ -376,6 +376,9 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
         } else if (domain === 'input_button') {
           mutableDevice.setComposedType(`Hass Button`);
           mutableDevice.setConfigUrl(`${(this.config.host as string | undefined)?.replace('ws://', 'http://').replace('wss://', 'https://')}/config/helpers`);
+        } else if (domain === 'button') {
+          mutableDevice.setComposedType(`Hass Button`);
+          mutableDevice.setConfigUrl(`${(this.config.host as string | undefined)?.replace('ws://', 'http://').replace('wss://', 'https://')}/config/helpers`);
         }
 
         // Add to the main endpoint onOffOutlet device type and the OnOffCluster
@@ -388,8 +391,8 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
           } else {
             await this.ha.callService(domain, 'turn_on', entity.entity_id);
           }
-          // We revert the state after 500ms except for input_boolean and switch template that mantain the state
-          if (domain !== 'input_boolean' && domain !== 'switch') {
+          // We revert the state after 500ms except for input_boolean, button and switch template that mantain the state
+          if (domain !== 'input_boolean' && domain !== 'button' && domain !== 'switch') {
             setTimeout(() => {
               // istanbul ignore next cause is too long
               data.endpoint.setAttribute(OnOff.Cluster.id, 'onOff', false, data.endpoint.log);
@@ -397,8 +400,8 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
           }
         });
         mutableDevice.addCommandHandler('', 'off', async (_data, _endpointName, _command) => {
-          // We don't revert only for input_boolean and switch template
-          if (domain === 'input_boolean' /* || domain === 'switch'*/) await this.ha.callService(domain, 'turn_off', entity.entity_id);
+          // We don't revert only for input_boolean, button and switch template
+          if (domain === 'input_boolean' || domain === 'button' /* || domain === 'switch'*/) await this.ha.callService(domain, 'turn_off', entity.entity_id);
         });
       }
 
@@ -991,7 +994,7 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
     );
     const domain = entityId.split('.')[0];
     if (['automation', 'scene', 'script', 'input_button'].includes(domain)) {
-      // No update for individual entities (automation, scene, script) only for input_boolean that maintains the state
+      // No update for individual entities (automation, scene, script, input_button) only for input_boolean and button that maintains the state
       return;
     } else if (domain === 'sensor') {
       // Convert to the airquality sensor if the entity is an air quality sensor with regex
