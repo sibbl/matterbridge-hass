@@ -391,7 +391,7 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
           } else {
             await this.ha.callService(domain, 'turn_on', entity.entity_id);
           }
-          // We revert the state after 500ms except for input_boolean, button and switch template that mantain the state
+          // We revert the state after 500ms except for input_boolean, button and switch template that maintain the state
           if (domain !== 'input_boolean' && domain !== 'button' && domain !== 'switch') {
             setTimeout(() => {
               // istanbul ignore next cause is too long
@@ -994,7 +994,7 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
     );
     const domain = entityId.split('.')[0];
     if (['automation', 'scene', 'script', 'input_button'].includes(domain)) {
-      // No update for individual entities (automation, scene, script, input_button) only for input_boolean and button that maintains the state
+      // No update for individual entities (automation, scene, script, input_button) - only input_boolean and button maintain the state so they continue processing
       return;
     } else if (domain === 'sensor') {
       // Convert to the airquality sensor if the entity is an air quality sensor with regex
