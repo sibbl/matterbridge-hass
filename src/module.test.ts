@@ -1112,6 +1112,57 @@ describe('HassPlatform', () => {
     expect(loggerInfoSpy).toHaveBeenCalledWith(expect.stringContaining(`Configured platform`));
   });
 
+  it('should register a button domain entity', async () => {
+    expect(haPlatform).toBeDefined();
+
+    // Find a button entity from the mock data
+    let entity: HassEntity | undefined;
+    let state: HassState | undefined;
+    (mockData.entities as HassEntity[]).forEach((e) => {
+      if (e.entity_id === 'button.my_shelly_1pm_plus_ii_reboot') entity = e;
+    });
+    (mockData.states as HassState[]).forEach((s) => {
+      if (s.entity_id === 'button.my_shelly_1pm_plus_ii_reboot') state = s;
+    });
+    expect(entity).toBeDefined();
+    expect(state).toBeDefined();
+    if (!entity || !state) return;
+    
+    // Set entity to be an individual entity (device_id null)
+    entity.device_id = null;
+    haPlatform.ha.hassEntities.set(entity.entity_id, entity);
+    haPlatform.ha.hassStates.set(entity.entity_id, state);
+
+    await haPlatform.onStart('Test reason');
+
+    expect(loggerInfoSpy).toHaveBeenCalledWith(`Starting platform ${idn}${mockConfig.name}${rs}${nf}: Test reason`);
+    expect(loggerInfoSpy).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`Creating device for individual entity .* domain ${CYAN}button${nf}`)),
+    );
+    expect(loggerDebugSpy).toHaveBeenCalledWith(expect.stringMatching(/Registering device .*/));
+    expect(matterbridge.addBridgedEndpoint).toHaveBeenCalled();
+
+    jest.clearAllMocks();
+    expect(haPlatform.matterbridgeDevices.size).toBe(6);
+    expect(haPlatform.matterbridgeDevices.get(entity.entity_id)).toBeDefined();
+    expect(haPlatform.matterbridgeDevices.get(entity.entity_id)?.getChildEndpoints()).toHaveLength(0);
+    await haPlatform.updateHandler(entity.entity_id, entity.entity_id, { state: 'off', entity_id: entity.entity_id } as HassState, { state: 'on', entity_id: entity.entity_id } as HassState);
+    expect(loggerLogSpy).toHaveBeenCalledWith(LogLevel.INFO, expect.stringContaining(`${db}Received update event from Home Assistant device`));
+
+    const device = haPlatform.matterbridgeDevices.get(entity.entity_id);
+    expect(device).toBeDefined();
+    if (!device) return;
+    expect(haPlatform.endpointNames.get(entity.entity_id)).toBe('');
+    await device.executeCommandHandler('on', {}, 'onOff', {}, device);
+    await device.executeCommandHandler('off', {}, 'onOff', {}, device);
+
+    jest.clearAllMocks();
+    await haPlatform.onConfigure();
+    expect(loggerInfoSpy).toHaveBeenCalledWith(expect.stringContaining(`Configuring platform`));
+    expect(loggerDebugSpy).toHaveBeenCalledWith(`Configuring state of entity ${CYAN}${entity.entity_id}${db}...`);
+    expect(loggerInfoSpy).toHaveBeenCalledWith(expect.stringContaining(`Configured platform`));
+  });
+
   it('should register a Switch template entity', async () => {
     expect(haPlatform).toBeDefined();
 
