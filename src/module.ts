@@ -386,13 +386,13 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
         mutableDevice.addCommandHandler('', 'on', async (data, _endpointName, _command) => {
           if (domain === 'automation') {
             await this.ha.callService(domain, 'trigger', entity.entity_id);
-          } else if (domain === 'input_button') {
+          } else if (domain === 'input_button' || domain === 'button') {
             await this.ha.callService(domain, 'press', entity.entity_id);
           } else {
             await this.ha.callService(domain, 'turn_on', entity.entity_id);
           }
-          // We revert the state after 500ms except for input_boolean, button and switch template that maintain the state
-          if (domain !== 'input_boolean' && domain !== 'button' && domain !== 'switch') {
+          // We revert the state after 500ms except for input_boolean and switch template that maintain the state
+          if (domain !== 'input_boolean' && domain !== 'switch') {
             setTimeout(() => {
               // istanbul ignore next cause is too long
               data.endpoint.setAttribute(OnOff.Cluster.id, 'onOff', false, data.endpoint.log);
@@ -400,8 +400,8 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
           }
         });
         mutableDevice.addCommandHandler('', 'off', async (_data, _endpointName, _command) => {
-          // We don't revert only for input_boolean, button and switch template
-          if (domain === 'input_boolean' || domain === 'button' /* || domain === 'switch'*/) await this.ha.callService(domain, 'turn_off', entity.entity_id);
+          // We don't revert only for input_boolean and switch template
+          if (domain === 'input_boolean' /* || domain === 'switch'*/) await this.ha.callService(domain, 'turn_off', entity.entity_id);
         });
       }
 
@@ -993,8 +993,8 @@ export class HomeAssistantPlatform extends MatterbridgeDynamicPlatform {
         `from ${YELLOW}${old_state.state}${db} with ${debugStringify(old_state.attributes)}${db} to ${YELLOW}${new_state.state}${db} with ${debugStringify(new_state.attributes)}`,
     );
     const domain = entityId.split('.')[0];
-    if (['automation', 'scene', 'script', 'input_button'].includes(domain)) {
-      // No update for individual entities (automation, scene, script, input_button) - only input_boolean and button maintain the state so they continue processing
+    if (['automation', 'scene', 'script', 'input_button', 'button'].includes(domain)) {
+      // No update for individual entities (automation, scene, script, input_button, button) - only input_boolean maintains the state so it continues processing
       return;
     } else if (domain === 'sensor') {
       // Convert to the airquality sensor if the entity is an air quality sensor with regex

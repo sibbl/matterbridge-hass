@@ -65,7 +65,7 @@ These domains are supported also like individual and split entities.
 | input_button  | Helpers     |
 | button        | Buttons     |
 
-These individual entities are exposed as on/off outlets. When the outlet is turned on, it triggers the associated entity. After triggering, the outlet automatically switches back to the off state. The helpers of domain input_boolean and button maintain the on/off state.
+These individual entities are exposed as on/off outlets. When the outlet is turned on, it triggers the associated entity. After triggering, the outlet automatically switches back to the off state. The helper of domain input_boolean maintains the on/off state.
 
 ## Supported sensors:
 

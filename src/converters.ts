@@ -329,9 +329,6 @@ export const hassUpdateStateConverter: { domain: string; state: string; clusterI
     { domain: 'input_boolean', state: 'on', clusterId: OnOff.Cluster.id, attribute: 'onOff', value: true },
     { domain: 'input_boolean', state: 'off', clusterId: OnOff.Cluster.id, attribute: 'onOff', value: false },
 
-    { domain: 'button', state: 'on', clusterId: OnOff.Cluster.id, attribute: 'onOff', value: true },
-    { domain: 'button', state: 'off', clusterId: OnOff.Cluster.id, attribute: 'onOff', value: false },
-
     { domain: 'binary_sensor', state: 'on', clusterId: BooleanState.Cluster.id, attribute: 'stateValue', value: true },
     { domain: 'binary_sensor', state: 'off', clusterId: BooleanState.Cluster.id, attribute: 'stateValue', value: false },
   ];

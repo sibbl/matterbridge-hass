@@ -1146,6 +1146,8 @@ describe('HassPlatform', () => {
     expect(haPlatform.matterbridgeDevices.size).toBe(6);
     expect(haPlatform.matterbridgeDevices.get(entity.entity_id)).toBeDefined();
     expect(haPlatform.matterbridgeDevices.get(entity.entity_id)?.getChildEndpoints()).toHaveLength(0);
+    
+    // Button domain should not process state updates (early return)
     await haPlatform.updateHandler(entity.entity_id, entity.entity_id, { state: 'off', entity_id: entity.entity_id } as HassState, { state: 'on', entity_id: entity.entity_id } as HassState);
     expect(loggerLogSpy).toHaveBeenCalledWith(LogLevel.INFO, expect.stringContaining(`${db}Received update event from Home Assistant device`));
 
@@ -1153,13 +1155,17 @@ describe('HassPlatform', () => {
     expect(device).toBeDefined();
     if (!device) return;
     expect(haPlatform.endpointNames.get(entity.entity_id)).toBe('');
+    
+    // Test command handlers
     await device.executeCommandHandler('on', {}, 'onOff', {}, device);
+    // Button domain doesn't have an off handler that calls a service
     await device.executeCommandHandler('off', {}, 'onOff', {}, device);
 
     jest.clearAllMocks();
     await haPlatform.onConfigure();
     expect(loggerInfoSpy).toHaveBeenCalledWith(expect.stringContaining(`Configuring platform`));
-    expect(loggerDebugSpy).toHaveBeenCalledWith(`Configuring state of entity ${CYAN}${entity.entity_id}${db}...`);
+    // Button domain should not be configured (early return in updateHandler)
+    expect(loggerDebugSpy).not.toHaveBeenCalledWith(`Configuring state of entity ${CYAN}${entity.entity_id}${db}...`);
     expect(loggerInfoSpy).toHaveBeenCalledWith(expect.stringContaining(`Configured platform`));
   });
 
